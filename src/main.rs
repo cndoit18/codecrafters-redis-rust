@@ -1,6 +1,7 @@
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
+    thread,
 };
 
 fn main() {
@@ -9,8 +10,10 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(mut stream) => {
-                println!("accepted new connection");
-                handle_connection(&mut stream);
+                thread::spawn(move || {
+                    println!("accepted new connection");
+                    handle_connection(&mut stream);
+                });
             }
             Err(e) => {
                 println!("error: {}", e);
@@ -23,10 +26,10 @@ fn handle_connection(stream: &mut TcpStream) {
     let mut buf = [0_u8; 1024];
     while let Ok(n) = stream.read(&mut buf) {
         if n == 0 {
-            break
+            break;
         }
         stream
-                .write_all(b"+PONG\r\n")
-                .expect("writing PONG response");
+            .write_all(b"+PONG\r\n")
+            .expect("writing PONG response");
     }
 }
